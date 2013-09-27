@@ -1,6 +1,6 @@
 import java.util.ArrayList;
 
-public class publisher extends library_object {
+public class Publisher extends library_object {
 
 	private int id;
 	public String name;
@@ -8,8 +8,12 @@ public class publisher extends library_object {
 	public String email;
 	public String phone;
 	
-	public publisher() {
+	public Publisher() {
 		id = 0; name= ""; address = ""; email = ""; phone = "";
+	}
+	
+	public Publisher(String name) {
+		this.name = name;
 	}
 	
 	public String keys[] = new String[] { "id", "name", "address", "email", "phone" };

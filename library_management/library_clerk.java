@@ -1,32 +1,61 @@
 import java.util.ArrayList;
 import java.util.Iterator;
+
+
 public class library_clerk {
 
 	public void add_book(String name,String publisher,String isbn,String category,Double price,String authors[]) {
-		int auth_id;
-		int pub_id = get_publisher_id(publisher);
+		
 		
 		
 		Book b = new Book();
+		
 		b.name = name;
 		b.isbn = isbn;
 		b.category = category;
 		b.price = price;
-		b.publisher_id = pub_id;
+		b.pub = new Publisher(publisher);
 		b.status = "available";
 		
-		library_manager<Book> lbb = new library_manager<Book>();
-		int book_id = lbb.add(b, "book");
+		Author auth[] = new Author[authors.length];
 		
 		for(int i=0;i<authors.length;i++) {
-			auth_id = get_author_id(authors[i]);
-			library_manager<written_by> wb = new library_manager<written_by>();
-			written_by wbo = new written_by();
-			wbo.author_id = auth_id;
-			wbo.book_id = book_id;
-			int wbid = wb.add(wbo, "written_by");
+			auth[i] = new Author(authors[i]);	
+		}
+		
+		b.authors = auth;
+		
+		library_manager<Book> lbb = new library_manager<Book>();
+		b.id = lbb.get_id("book");
+		lbb.add_j(b, "book");
+		
+		/*
+		
+		*/
+	}
+	
+	public void get_book(String b_name) {
+		ArrayList<Book> blist;
+		Book b = new Book();
+		library_manager<Book> lb = new library_manager<Book>();
+		blist = lb.getObj("name", b_name, "book", b, Book.class);
+		Iterator<Book> it = blist.iterator();
+		while(it.hasNext()) {
+			b = it.next();
+			show_book(b);
 		}
 	}
+	
+	public void show_book(Book b) {
+		System.out.println("Name : " + b.name);
+		System.out.println("Publisher : " + b.pub.name);
+		System.out.println("Authors : ");
+		for(int i=0;i<b.authors.length; i++) {
+			System.out.println(b.authors[i].name);
+		}
+	}
+	
+	/*
 	
 	private int get_author_id(String name) {
 		library_manager<author> lba = new library_manager<author>();
@@ -58,5 +87,5 @@ public class library_clerk {
 		}
 		
 	}
-	
+	*/
 }

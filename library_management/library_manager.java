@@ -1,7 +1,7 @@
 import java.util.ArrayList;
-import java.util.Iterator;
+
 import java.net.UnknownHostException;
-import org.bson.BSONObject;
+
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -10,7 +10,8 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
-
+import com.mongodb.util.JSON;
+import com.google.gson.Gson;
 
 public class library_manager<T extends library_object> {
 
@@ -28,114 +29,48 @@ public class library_manager<T extends library_object> {
 		}
 	}
 	
-	public int add(T b,String tab) {
-		
-		try {
-		
-		ArrayList<String> val = get_values(b);
-		String keys[] = get_keys(b);
-		
-		int ct = 0;	
-			
-			
-		DBCollection table = db.getCollection(tab);
-		BasicDBObject doc = new BasicDBObject();
-		
-		Iterator<String> it = val.iterator();
-		
-		int acc = get_id(tab);
-		
-		while(it.hasNext()) {
-			String v = it.next();
-			
-			if(ct==0) { 
-				doc.put(keys[ct], ((Integer)(acc)).toString());
-			}
-			else { 
-				doc.put(keys[ct],v);
-			}
-			
-			ct ++ ;
-		}
-		
-		table.insert(doc);
-		
-		return acc;
-		
-		}catch(MongoException m) {
-			m.printStackTrace();
-		}
-		
-		return 1;
-		
-	}
 	
-   public T get(String tab,T b) {
-		
-	   DBCollection table = db.getCollection(tab);
-	   
-	   BasicDBObject db = (BasicDBObject) table.findOne();
-	   ArrayList<String> val = get_values(b);
-	   String[] keys = get_keys(b);
-	   
-	   for(int i=0;i<b.keys.length;i++) {
-		   val.add(i,(String)db.get(keys[i]));
-	   }
-	   
-	   b.put(val);
-	   
-	   return b;
-	}
-   
-   public ArrayList<T> get(String key,String value,String tab,T b) {
-		
-	   BasicDBObject query = new BasicDBObject(key,value);
-	   DBCollection table = db.getCollection(tab);
-	   
-	   ArrayList<T> blist = null;
-	   String[] keys = get_keys(b);
-	   
-	   DBCursor cursor = table.find(query);
+  public void add_j(T b,String tab) {
+	  
+	  try {
+	  DBCollection table = db.getCollection(tab);  
+      Gson gson = new Gson();
+      String json = gson.toJson(b);
+      DBObject doc = (DBObject)JSON.parse(json);
+      table.insert(doc);
+	  }catch(MongoException m) {
+		  m.printStackTrace();
+	  }
+  }
+  
+  public ArrayList<T> getObj(String key,String val,String tab, T b, Class<T> c ) {
+	  
+	  BasicDBObject query = new BasicDBObject(key,val);
+	  DBCollection table = db.getCollection(tab);
+	  //query.append("_id", 0);
+	  
+	  Gson gson = new Gson();
+	  
+	  ArrayList<T> blist = null;
+	  DBCursor cursor = table.find(query);
 	   if(cursor!=null) {
 	   blist = new ArrayList<T>();
 	   while(cursor.hasNext()) {
 		   BasicDBObject db = (BasicDBObject)cursor.next();
-		   
-		   ArrayList<String> val = new ArrayList<String>();
-		   for(int i=0;i<keys.length;i++) {
-			   val.add(i,(String)db.get(keys[i]));
-		   }
-		   b.put(val);
-		   
+
+		   String json = db.toString();
+		   //System.out.println(json);
+		   b = gson.fromJson(json, c);
+
 		   blist.add(b);
 	   }
 	   }
-	   	   
-	   return blist;
-	}
-   
-   public void update(T b, String tab) {
-	   DBCollection table = db.getCollection(tab);
-	   BasicDBObject up = new BasicDBObject();
-	   ArrayList<String> val = get_values(b);
-	   String keys[] = get_keys(b);
-	   for(int i=1;i<keys.length;i++) {
-		   up.append(keys[i], val.get(i));
-	   }
-	   BasicDBObject search = new BasicDBObject().append(keys[0], val.get(0));
-	   table.update(search, up);
-   }
-   
-   public void remove(T b, String tab) {
-	   DBCollection table = db.getCollection(tab);
-	   BasicDBObject rem = new BasicDBObject();
-	   String[] keys = get_keys(b);
-	   ArrayList<String> val = get_values(b);
-	   rem.put(keys[0], val.get(0));
-	   table.remove(rem);
-   }
-   
-   private int get_id(String tab) {
+	  
+	  return blist;
+  }
+
+
+   public int get_id(String tab) {
 	   
 	   DBCollection table = db.getCollection(tab);
 	   BasicDBObject orderBy = new BasicDBObject().append("id", -1);
@@ -152,6 +87,7 @@ public class library_manager<T extends library_object> {
 	   return id + 1;
    }
    
+/*
    private String[] get_keys(T b) {
 	   String[] keys = null;
 	   
@@ -214,7 +150,7 @@ public class library_manager<T extends library_object> {
 		
 		return val;
    }
-	
+	*/
 }
 
 

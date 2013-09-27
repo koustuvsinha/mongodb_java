@@ -1,8 +1,7 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Iterator;
+
 
 
 
@@ -44,8 +43,11 @@ public class library_app {
 			lc.add_book(name, publisher, isbn, category, price, authors);
 			System.out.println("Book added!");
 			break;
-		case 2 : System.out.println("Enter key and value to search");
-				/*
+		case 2 : System.out.println("Enter Book name to search");
+		        String b_name = br.readLine();
+		        library_clerk lcc = new library_clerk();
+		        lcc.get_book(b_name);
+		/*
 				String key = br.readLine();
 				String value = br.readLine();
 				library_manager<Book> lb1 = new library_manager<Book>();
