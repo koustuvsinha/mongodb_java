@@ -4,9 +4,11 @@ import java.util.Iterator;
 
 public class library_clerk {
 
-	public void add_book(String name,String publisher,String isbn,String category,Double price,String authors[]) {
+	public boolean add_book(String name,String publisher,String isbn,String category,Double price,String authors[]) {
 		
-		
+		library_manager<Book> lbb = new library_manager<Book>();
+		library_manager<Author> lba = new library_manager<Author>();
+		int flag[] = new int[authors.length];
 		
 		Book b = new Book();
 		
@@ -17,21 +19,53 @@ public class library_clerk {
 		b.pub = new Publisher(publisher);
 		b.status = "available";
 		
-		Author auth[] = new Author[authors.length];
+		int book_id = lbb.get_id("book");
+		//System.out.println(book_id);
+		
+		
+		
 		
 		for(int i=0;i<authors.length;i++) {
-			auth[i] = new Author(authors[i]);	
+			Author a = new Author();
+			Author res = new Author();
+			ArrayList<Author> result = lba.getObj("name", authors[i], "author",res,Author.class);
+			//System.out.println("Result size : " + result.size());
+				if(result.size()==1) {
+					a = result.get(0);
+					a.books.add(book_id);
+					flag[i] = 1;
+					System.out.println("Author to be Updated");
+					if(lba.update(a, "author")==false) {				//if update operation fails, rollback
+						lba.rollback();
+						return false;
+					}
+			}else {
+			
+				a.name = authors[i];
+				a.books.add((Integer)book_id);
+				flag[i] = 0;
+				System.out.println("Author to be Added");
+				if(lba.add_j(a, "author")==false) {						//if add operation fails, rollback
+					lba.rollback();
+					return false;
+				}
+			}
+			b.authors.add(a.get_id());
+			
 		}
 		
-		b.authors = auth;
+		if((lbb.add_j(b, "book")==true)) {								//if no problem, commit
+		 lbb.commit();	
+		 lba.commit();
+		} else {														//else, rollback both book and author
+			lbb.rollback();
+			lba.rollback();
+			return false;
+		}
+		show_book(b);
+		//lbb.rollback();
 		
-		library_manager<Book> lbb = new library_manager<Book>();
-		b.id = lbb.get_id("book");
-		lbb.add_j(b, "book");
-		
-		/*
-		
-		*/
+		return true;
 	}
 	
 	public void get_book(String b_name) {
@@ -50,8 +84,8 @@ public class library_clerk {
 		System.out.println("Name : " + b.name);
 		System.out.println("Publisher : " + b.pub.name);
 		System.out.println("Authors : ");
-		for(int i=0;i<b.authors.length; i++) {
-			System.out.println(b.authors[i].name);
+		for(int i=0;i<b.authors.size(); i++) {
+			System.out.println(b.authors.get(i));
 		}
 	}
 	

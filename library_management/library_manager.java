@@ -17,6 +17,8 @@ public class library_manager<T extends library_object> {
 
 	private DB db;
 	private MongoClient mongo;
+	private DBCollection backup_add;									//backup collection to store new additions	
+	private DBCollection backup_update;									//backup collection to store old updates
 	
 	public library_manager() {
 		try {
@@ -24,23 +26,83 @@ public class library_manager<T extends library_object> {
 			mongo = new MongoClient("localhost",27017);
 			db = mongo.getDB("library");
 			
+			
+			
 		}catch(UnknownHostException e) {
 			e.printStackTrace();
 		}
 	}
 	
 	
-  public void add_j(T b,String tab) {
+  public boolean add_j(T b,String tab) {
 	  
 	  try {
 	  DBCollection table = db.getCollection(tab);  
-      Gson gson = new Gson();
+	  backup_add = db.getCollection("backup_add");
+	  
+	  Gson gson = new Gson();
       String json = gson.toJson(b);
       DBObject doc = (DBObject)JSON.parse(json);
       table.insert(doc);
+      BasicDBObject docadd = ((BasicDBObject)doc).append("table", tab);
+      backup_add.insert(docadd);											//backup new inserts in backup collection
+      
+      return true;
 	  }catch(MongoException m) {
 		  m.printStackTrace();
+		  return false;
 	  }
+  }
+  public boolean update(T b,String tab) {
+	  try {
+		  DBCollection table = db.getCollection(tab);  
+		  backup_update = db.getCollection("backup_update");
+		  
+		  Gson gson = new Gson();
+	      String json = gson.toJson(b);
+	      DBObject doc = (DBObject)JSON.parse(json);
+	      BasicDBObject query = new BasicDBObject("id",b.get_id());
+	      BasicDBObject docup = ((BasicDBObject)table.findOne(query)).append("table", tab);
+	      backup_update.insert(docup);										//backups old update values in backup collection
+	      table.update(query, doc);
+	      return true;
+		  
+	  }catch(MongoException m) {
+		  m.printStackTrace();
+		  return false;
+	  }
+  }
+  
+  public boolean rollback() {													//new method, reverts to original
+	  backup_add = db.getCollection("backup_add");
+	  backup_update = db.getCollection("backup_update");
+	  while(backup_add.find().size() != 0) {
+		  DBCursor dc = backup_add.find();
+		  while(dc.hasNext()) {
+			  BasicDBObject bdb = (BasicDBObject)dc.next();
+			  String tab = bdb.getString("table");
+			  bdb.removeField("table");
+			  DBCollection table = db.getCollection(tab);
+			  BasicDBObject rem = new BasicDBObject().append("id", bdb.get("id"));
+			  table.remove(rem);
+		  }
+	  }
+	  
+	  
+	  
+	  
+	  backup_add.drop();												//destroys backup
+	  backup_update.drop();
+	  return true;
+  }
+  
+  public boolean commit() {
+	  backup_add = db.getCollection("backup_add");						//destroys backup so no further rollback possible
+	  backup_update = db.getCollection("backup_update");
+	  
+	  backup_add.drop();
+	  backup_update.drop();
+	  return true;
   }
   
   public ArrayList<T> getObj(String key,String val,String tab, T b, Class<T> c ) {
@@ -68,6 +130,14 @@ public class library_manager<T extends library_object> {
 	  
 	  return blist;
   }
+  
+  
+  /*
+  public T getOneObj(int id, String tab, T b, Class<T> c) {
+	  
+	  
+	  
+  }*/
 
 
    public int get_id(String tab) {
@@ -80,77 +150,14 @@ public class library_manager<T extends library_object> {
 	   if(dbo.hasNext()) {
 		   BasicDBObject res = (BasicDBObject)dbo.next();
 		   if(res.get("id")!=null) {
-		   id = Integer.parseInt((String) res.get("id"));
+		   id = ((Integer)res.get("id"));
 		   }
 	   }
 	   
 	   return id + 1;
    }
    
-/*
-   private String[] get_keys(T b) {
-	   String[] keys = null;
-	   
-	   if(b instanceof publisher) {
-			publisher obj = (publisher) b;
-			keys = obj.keys;
-		}
-		if(b instanceof author) {
-			author obj = (author)b;
-			keys = obj.keys;
-		}
-		if(b instanceof User) {
-			User obj = (User)b;
-			keys = obj.keys;
-		}
-		if(b instanceof written_by) {
-			written_by obj = (written_by)b;
-			keys = obj.keys;
-		}
-		if(b instanceof Issue) {
-			Issue obj = (Issue)b;
-			keys = obj.keys;
-		}
-		if(b instanceof Book) {
-			Book obj = (Book)b;
-			keys = obj.keys;
-		}
-		
-		
-	   
-	   return keys;
-   }
-   
-   private ArrayList<String> get_values(T b) {
-	   ArrayList<String> val = null;
-	   if(b instanceof publisher) {
-			publisher obj = (publisher) b;
-			val = obj.get();
-		}
-		if(b instanceof author) {
-			author obj = (author)b;
-			val = obj.get();
-		}
-		if(b instanceof User) {
-			User obj = (User)b;
-			val = obj.get();
-		}
-		if(b instanceof written_by) {
-			written_by obj = (written_by)b;
-			val = obj.get();
-		}
-		if(b instanceof Issue) {
-			Issue obj = (Issue)b;
-			val = obj.get();
-		}
-		if(b instanceof Book) {
-			Book obj = (Book)b;
-			val = obj.get();
-		}
-		
-		return val;
-   }
-	*/
+
 }
 
 

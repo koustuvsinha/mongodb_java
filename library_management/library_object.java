@@ -14,6 +14,8 @@ public class library_object {
 		return res;
 	}
 	
-	
+	public int get_id() {
+		return 0;
+	}
 	
 }

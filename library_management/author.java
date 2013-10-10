@@ -7,9 +7,13 @@ public class Author extends library_object {
 	public String address;
 	public String email;
 	public String phone;
+	public ArrayList<Integer> books;
 	
 	public Author() {
-		id = 0; name= ""; address = ""; email = ""; phone = "";
+		library_manager<Author> lba = new library_manager<Author>();
+		id = lba.get_id("author");
+		name= ""; address = ""; email = ""; phone = "";
+		books = new ArrayList<Integer>();
 	}
 	
 	public Author(String name) {
