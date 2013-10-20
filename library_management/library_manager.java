@@ -132,12 +132,21 @@ public class library_manager<T extends library_object> {
   }
   
   
-  /*
+  
   public T getOneObj(int id, String tab, T b, Class<T> c) {
 	  
+	  BasicDBObject query = new BasicDBObject("id",id);
+	  DBCollection table = db.getCollection(tab);
 	  
+	  Gson gson = new Gson();
 	  
-  }*/
+	  BasicDBObject db = (BasicDBObject)table.findOne(query);
+	  String json = db.toString();
+	  
+	  b = gson.fromJson(json, c);	  
+	  
+	  return b;  
+  }
 
 
    public int get_id(String tab) {

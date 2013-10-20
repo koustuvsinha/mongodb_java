@@ -73,19 +73,26 @@ public class library_clerk {
 		Book b = new Book();
 		library_manager<Book> lb = new library_manager<Book>();
 		blist = lb.getObj("name", b_name, "book", b, Book.class);
+		if(blist==null) System.out.println("No book exists");
+		else {
 		Iterator<Book> it = blist.iterator();
 		while(it.hasNext()) {
 			b = it.next();
 			show_book(b);
 		}
+		}
 	}
 	
 	public void show_book(Book b) {
+		Author at = new Author();
 		System.out.println("Name : " + b.name);
 		System.out.println("Publisher : " + b.pub.name);
 		System.out.println("Authors : ");
+		library_manager<Author> lba = new library_manager<Author>();
 		for(int i=0;i<b.authors.size(); i++) {
-			System.out.println(b.authors.get(i));
+			Author res = new Author();
+			res = lba.getOneObj(b.authors.get(i), "author", at, Author.class);
+			System.out.println(res.name);
 		}
 	}
 	
