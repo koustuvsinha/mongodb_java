@@ -8,6 +8,9 @@ public class library_clerk {
 		
 		library_manager<Book> lbb = new library_manager<Book>();
 		library_manager<Author> lba = new library_manager<Author>();
+		
+		sandbox<Book> lsb = new sandbox<Book>();
+		
 		int flag[] = new int[authors.length];
 		
 		Book b = new Book();
@@ -62,6 +65,10 @@ public class library_clerk {
 			lba.rollback();
 			return false;
 		}
+		
+		lsb.add_j(b, "book");
+		//lsb.commit();
+		
 		show_book(b);
 		//lbb.rollback();
 		
